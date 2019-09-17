@@ -62,10 +62,7 @@ function commerce_hubspot_help($route_name, RouteMatchInterface $route_match) {
   }
 }
 
-/**
- * Implements hook_entity_update().
- */
-function commerce_hubspot_entity_update(EntityInterface $entity) {
+function commerce_hubspot_create_queue_item(EntityInterface $entity) {
   $entities_to_sync = [
     'commerce_order',
     'commerce_order_item',
@@ -97,10 +94,27 @@ function commerce_hubspot_entity_update(EntityInterface $entity) {
 
   $queue_factory = \Drupal::service('queue');
   $queue = $queue_factory->get('commerce_hubspot_entity_sync_to');
+
+
   $queue->createItem([
     'entity_type' => $entity_type_id,
     'entity_id' => $entity->id(),
   ]);
+
+}
+
+/**
+ * Implements hook_entity_update().
+ */
+function commerce_hubspot_entity_update(EntityInterface $entity) {
+  commerce_hubspot_create_queue_item($entity);
+}
+
+/**
+ * Implements hook_entity_insert().
+ */
+function commerce_hubspot_entity_insert(EntityInterface $entity) {
+  commerce_hubspot_create_queue_item($entity);
 }
 
 /**

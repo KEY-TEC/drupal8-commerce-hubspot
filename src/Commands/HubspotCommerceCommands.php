@@ -53,6 +53,26 @@ class HubspotCommerceCommands extends DrushCommands {
   }
 
   /**
+   * Sync all entities of given type with the Hubspot API. (Useful for testing)
+   *
+   * @param string $entity_type
+   *   The entity type.
+   *
+   * @command commerce-hubspot:sync-to-all
+   * @validate-module-enabled commerce_hubspot
+   * @aliases ch:sa
+   */
+  public function syncAll($entity_type) {
+    $props = [
+      'status' => '1'
+    ];
+    $entities = $this->entityTypeManager->getStorage($entity_type)->loadByProperties($props);
+    foreach ($entities as $entity) {
+      $this->syncTo($entity_type, $entity->id());
+    }
+  }
+
+  /**
    * Sync an entity with the Hubspot API. (Useful for testing)
    *
    * @param string $entity_type

@@ -218,7 +218,8 @@ class SyncToService implements SyncToServiceInterface {
   protected function syncDeal(array $hubspot_payload) {
     try {
       $bridge = new EcommerceBridge($this->client);
-
+      $changeOccurredTimestamp = $hubspot_payload[0]['changeOccurredTimestamp'];
+      $hubspot_payload[0]['changeOccurredTimestamp'] = $changeOccurredTimestamp . '000';
       $response = $bridge->sendSyncMessages('DEAL', $hubspot_payload);
 
       // If we were successful, return the remote ID.
