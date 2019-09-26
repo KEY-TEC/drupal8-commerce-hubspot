@@ -7,6 +7,7 @@
 
 use Drupal\commerce_hubspot\Event\SyncEntityTypesEvent;
 
+use Drupal\commerce_order\Entity\Order;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
@@ -16,7 +17,8 @@ const COMMERCE_HUBSPOT_LOGGER_CHANNEL = 'commerce_hubspot';
 /**
  * Implements hook_cron().
  */
-function commerce_hubspot_cron() {
+function commerce_hubspot_cron()
+{
   // Fetch the current time.
   $current_time = REQUEST_TIME;
   // Fetch the last synced time (convert to milliseconds as Hubspot does).
@@ -45,7 +47,8 @@ function commerce_hubspot_cron() {
 /**
  * Implements hook_help().
  */
-function commerce_hubspot_help($route_name, RouteMatchInterface $route_match) {
+function commerce_hubspot_help($route_name, RouteMatchInterface $route_match)
+{
   switch ($route_name) {
     case 'help.page.commerce_hubspot':
       $output = '';
@@ -54,18 +57,18 @@ function commerce_hubspot_help($route_name, RouteMatchInterface $route_match) {
           'The Commerce Hubspot module integrates Drupal
         Commerce with Hubspot. It syncs data with the <a target="_blank" href=":hubspot_api">Hubspot API</a>
         any time a user, order, or product is created or updated.', [
-          ':hubspot_api' => 'https://www.hubspot.com',
-        ]
-      ) . '</p>';
+            ':hubspot_api' => 'https://www.hubspot.com',
+          ]
+        ) . '</p>';
 
       return $output;
   }
 }
 
-function commerce_hubspot_create_queue_item(EntityInterface $entity) {
+function commerce_hubspot_create_queue_item(EntityInterface $entity)
+{
   $entities_to_sync = [
     'commerce_order',
-    'commerce_order_item',
     'commerce_product_variation',
     'profile',
     'user'
@@ -92,35 +95,50 @@ function commerce_hubspot_create_queue_item(EntityInterface $entity) {
     return;
   }
 
+
   $queue_factory = \Drupal::service('queue');
+  /** @var Drupal\Core\Queue\DatabaseQueue $queue */
   $queue = $queue_factory->get('commerce_hubspot_entity_sync_to');
 
-
+  //
   $queue->createItem([
     'entity_type' => $entity_type_id,
     'entity_id' => $entity->id(),
   ]);
 
+  if ($entity_type_id == 'commerce_order') {
+    /** @var Order $order */
+    $order = $entity;
+    foreach ($order->getItems() as $item) {
+      $queue->createItem([
+        'entity_type' => $item->getEntityTypeId(),
+        'entity_id' => $item->id(),
+      ]);
+    }
+  }
 }
 
 /**
  * Implements hook_entity_update().
  */
-function commerce_hubspot_entity_update(EntityInterface $entity) {
+function commerce_hubspot_entity_update(EntityInterface $entity)
+{
   commerce_hubspot_create_queue_item($entity);
 }
 
 /**
  * Implements hook_entity_insert().
  */
-function commerce_hubspot_entity_insert(EntityInterface $entity) {
+function commerce_hubspot_entity_insert(EntityInterface $entity)
+{
   commerce_hubspot_create_queue_item($entity);
 }
 
 /**
  * Implements hook_form_FORM_ID_alter().
  */
-function commerce_hubspot_form_hubspot_api_settings_alter(&$form, FormStateInterface $form_state, $form_id) {
+function commerce_hubspot_form_hubspot_api_settings_alter(&$form, FormStateInterface $form_state, $form_id)
+{
   // Add a checkbox to allow the user to select to install and enable the
   // eCommerce bridge for Hubspot.
   $config = \Drupal::service('config.factory')->get('hubspot_api.settings');
@@ -145,7 +163,8 @@ function commerce_hubspot_form_hubspot_api_settings_alter(&$form, FormStateInter
  * @param \Drupal\Core\Form\FormStateInterface $form_state
  *   The form state interface.
  */
-function commerce_hubspot_api_settings_form_submit(array &$form, FormStateInterface $form_state) {
+function commerce_hubspot_api_settings_form_submit(array &$form, FormStateInterface $form_state)
+{
   // If the bridge was previously installed, and the checkbox is unchecked now
   // uninstall the bridge.
   $config = \Drupal::service('config.factory')->getEditable('hubspot_api.settings');
@@ -157,8 +176,7 @@ function commerce_hubspot_api_settings_form_submit(array &$form, FormStateInterf
   $install_bridge = $form_state->getValue('install_bridge');
   if (!$install_bridge && $config->get('install_bridge')) {
     \Drupal::service('commerce_hubspot.ecommerce_bridge')->uninstallBridge();
-  }
-  // If the user opted to install the bridge, install it.
+  } // If the user opted to install the bridge, install it.
   else {
     \Drupal::service('commerce_hubspot.ecommerce_bridge')->installBridge();
   }
