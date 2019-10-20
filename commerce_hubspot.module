@@ -115,10 +115,17 @@ function commerce_hubspot_create_queue_item(EntityInterface $entity) {
         'entity_id' => $order->id(),
       ]);
       foreach ($order->getItems() as $item) {
-        $queue->createItem([
-          'entity_type' => $item->getEntityTypeId(),
-          'entity_id' => $item->id(),
-        ]);
+        $purchased_entity = $item->getPurchasedEntity();
+        if ($purchased_entity != NULL) {
+          $queue->createItem([
+            'entity_type' => $purchased_entity->getEntityTypeId(),
+            'entity_id' => $purchased_entity->id(),
+          ]);
+          $queue->createItem([
+            'entity_type' => $item->getEntityTypeId(),
+            'entity_id' => $item->id(),
+          ]);
+        }
       }
     }
   }
