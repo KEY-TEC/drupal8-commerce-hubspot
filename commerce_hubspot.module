@@ -104,8 +104,7 @@ function commerce_hubspot_create_queue_item(EntityInterface $entity) {
   if ($entity_type_id == 'commerce_order') {
     /** @var Order $order */
     $order = $entity;
-    if ($order->getState()->getString() == 'fulfillment' || $order->getState()->getString() == 'completed' || $order->getState()->getString() == 'canceled') {
-
+    if ($order->getState()->getString() == 'fulfillment' || $order->getState()->getString() == 'completed' || $order->getState()->getString() == 'canceled' || $order->getState()->getString() == 'validation') {
       $queue->createItem([
         'entity_type' => 'user',
         'entity_id' => $order->getCustomerId(),
