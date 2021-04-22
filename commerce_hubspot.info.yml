@@ -2,7 +2,7 @@ name: Commerce Hubspot
 description: Integrates Drupal Commerce with Hubspot.
 type: module
 package: Hubspot
-core: '8.x'
+core: '^8 || ^9'
 project: 'hubspot_api'
 dependencies:
   - commerce_order

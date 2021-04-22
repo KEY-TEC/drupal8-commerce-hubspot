@@ -19,7 +19,7 @@ const COMMERCE_HUBSPOT_LOGGER_CHANNEL = 'commerce_hubspot';
  */
 function commerce_hubspot_cron() {
   // Fetch the current time.
-  $current_time = REQUEST_TIME;
+  $current_time = \Drupal::time()->getRequestTime();
   // Fetch the last synced time (convert to milliseconds as Hubspot does).
   $last_synced = \Drupal::state()
     ->get('commerce_hubspot.last_synced_from_time');

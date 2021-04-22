@@ -6,6 +6,7 @@ services:
       - '@entity_type.manager'
       - '@logger.factory'
       - '@event_dispatcher'
+      - '@datetime.time'
 
   commerce_hubspot.sync_from:
     class: Drupal\commerce_hubspot\Hubspot\SyncFromService

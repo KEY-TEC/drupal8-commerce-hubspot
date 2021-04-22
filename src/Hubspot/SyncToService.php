@@ -4,6 +4,7 @@ namespace Drupal\commerce_hubspot\Hubspot;
 
 use Drupal\commerce_hubspot\Event\EntityMappingEvent;
 use Drupal\commerce_hubspot\Event\FieldMappingEvent;
+use Drupal\Component\Datetime\TimeInterface;
 use Drupal\hubspot_api\Manager;
 
 use Drupal\Core\Entity\EntityInterface;
@@ -62,6 +63,13 @@ class SyncToService implements SyncToServiceInterface {
   protected $eventDispatcher;
 
   /**
+   * The time service.
+   *
+   * @var \Drupal\Component\Datetime\Time
+   */
+  protected $time;
+
+  /**
    * Constructs a new HubSpot Commerce service instance.
    *
    * @param \Drupal\hubspot_api\Manager $hubspot_manager
@@ -79,11 +87,13 @@ class SyncToService implements SyncToServiceInterface {
     Manager $hubspot_manager,
     EntityTypeManagerInterface $entity_type_manager,
     LoggerChannelFactoryInterface $logger_factory,
-    EventDispatcherInterface $event_dispatcher
+    EventDispatcherInterface $event_dispatcher,
+    TimeInterface $time
   ) {
     $this->entityTypeManager = $entity_type_manager;
     $this->logger = $logger_factory->get(COMMERCE_HUBSPOT_LOGGER_CHANNEL);
     $this->eventDispatcher = $event_dispatcher;
+    $this->time = $time;
 
     // Initialize our Hubspot API client.
     $this->client = $hubspot_manager->getHandler()->client;
@@ -162,7 +172,7 @@ class SyncToService implements SyncToServiceInterface {
       [
         'integratorObjectId' => $entity_id,
         'action' => 'UPSERT',
-        'changeOccurredTimestamp' => REQUEST_TIME,
+        'changeOccurredTimestamp' => $this->time->getRequestTime(),
         'propertyNameToValues' => $hubspot_field_properties,
         'associations' => isset($field_mapping['associations']) ?: [],
       ],
